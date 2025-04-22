@@ -1,20 +1,17 @@
+import useChatSocket from '@/hooks/useChatSocket';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 export type MessageType = {
-  id: number;
+  id: string;
   text: string;
-  sender: 'user' | 'other';
+  name?: string;
   time: string;
-  read: boolean;
 };
 
-type ChatMessageProps = {
-  message: MessageType;
-};
-
-export function ChatMessage({ message }: ChatMessageProps) {
-  const isUser = message.sender === 'user';
+export function ChatMessage({id, text, name, time}: MessageType) {
+  const { id:socketId } = useChatSocket();
+  const isUser = id === socketId;
   
   return (
     <View
@@ -29,13 +26,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
           isUser ? styles.userBubble : styles.otherBubble,
         ]}
         >
+        {!isUser && <Text style={styles.readTextSender}>{name}</Text>}
         <Text style={[styles.messageText, isUser ? styles.userText : styles.otherText]}>
-          {message.text}
+          {text}
         </Text>
       </View>
       <View style={styles.timeContainer}>
-        {isUser && <Text style={styles.readText}>{message.read ? 'You' : ''}</Text>}
-        <Text style={styles.timeText}>{message.time}</Text> 
+        {isUser && <Text style={styles.readTextSender}>You</Text>}
+        <Text style={styles.timeText}>{time}</Text> 
       </View>
     </View>
   );
@@ -86,7 +84,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     marginRight: 4,
   },
-  readText: {
+  readTextSender: {
     fontSize: 12,
     color: '#6C63FF',
     fontFamily: 'Inter-Regular',

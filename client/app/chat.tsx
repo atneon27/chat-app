@@ -1,58 +1,21 @@
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native"
-import { ArrowLeft, UserSearch } from "lucide-react-native";
+import { ArrowLeft } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAvoidingView, Platform } from "react-native";
 import { Send } from "lucide-react-native";
-import { ChatMessage, MessageType } from "@/components/ChatMessage";
+import { ChatMessage } from "@/components/ChatMessage";
 import Animated, { Layout, FadeIn, FadeInRight } from "react-native-reanimated";    
 import { TextInput } from "react-native-gesture-handler";
+import useChatSocket from "@/hooks/useChatSocket";
 
 const ChatPage = () => {
-    const messages: MessageType[] = [
-    {
-        id: 1,
-        text: 'Hi there! 👋',
-        sender: 'other',
-        time: '10:00 AM',
-        read: true,
-    },
-    {
-        id: 2,
-        text: 'Hey! How are you doing?',
-        sender: 'user',
-        time: '10:02 AM',
-        read: true,
-    },
-    {
-        id: 3,
-        text: 'I\'m doing great, thanks for asking! How about you?',
-        sender: 'other',
-        time: '10:03 AM',
-        read: true,
-    },
-    {
-        id: 4,
-        text: 'Pretty good! Just working on this new app design.',
-        sender: 'user',
-        time: '10:05 AM',
-        read: true,
-    },
-    {
-        id: 5,
-        text: 'That sounds exciting! What kind of app is it?',
-        sender: 'other',
-        time: '10:06 AM',
-        read: true,
-    },
-    ];
-
     const router = useRouter();
-
     const [showActiveUsers, setShowActiveUsers] = useState<boolean>(false);
     const [message, setMessage] = useState<string>("")
+    const { messages, sendMessage, id } = useChatSocket();
 
     const flatListRef = useRef<FlatList>(null);
 
@@ -60,15 +23,15 @@ const ChatPage = () => {
     const onBackButtonPress = () => {
         router.replace("/auth")
     };
-
+    
     const onUserSearchPress = () => {
         setShowActiveUsers(!showActiveUsers)
     };
 
     const handleSend = () => {
         if (message.trim()) {
-        // sendMessage(message);
-        setMessage('');
+            sendMessage(message);
+            setMessage('');
         }
     };
 
@@ -76,16 +39,14 @@ const ChatPage = () => {
         <SafeAreaView style={styles.container} edges={["top"]}>
             <StatusBar backgroundColor={styles.header.backgroundColor} style="auto" />
             <View style={styles.header}>
-                <TouchableOpacity onPress={onBackButtonPress}>
+                <TouchableOpacity style={styles.backButton} onPress={onBackButtonPress}>
                     <ArrowLeft size={24} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.headerText}>Open Chat</Text>
-                <TouchableOpacity onPress={onUserSearchPress}>
-                    <UserSearch color="#fff" size={24} />
-                </TouchableOpacity>
-            </View> 
 
-            {showActiveUsers && <Text>Active Users</Text>}
+                <View style={styles.headerTitleWrapper}>
+                    <Text style={styles.headerText}>Open Chat</Text>
+                </View>
+            </View>
             
             <KeyboardAvoidingView
                 style={styles.keyboardAvoidingView}
@@ -95,7 +56,7 @@ const ChatPage = () => {
                 <Animated.FlatList
                     ref={flatListRef}
                     data={messages}
-                    keyExtractor={(item) => item.id.toString()}
+                    keyExtractor={(_, idx) => idx.toString()}
                     contentContainerStyle={styles.messagesContainer}
                     showsVerticalScrollIndicator={false}
                     renderItem={({item, index}) => (
@@ -103,7 +64,12 @@ const ChatPage = () => {
                         entering={FadeInRight.delay(index * 100).duration(300)}
                         layout={Layout.springify()}
                         >
-                        <ChatMessage message={item} />
+                        <ChatMessage 
+                            id={item.id}
+                            text={item.text}
+                            time={item.time}
+                            name={item.name}
+                        />
                         </Animated.View>
                     )}
                 />
@@ -142,23 +108,84 @@ const styles = StyleSheet.create({
         backgroundColor: '#f3f4f6',
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        color: 'white',
-        padding: 16,
-        fontSize: 24,
+        height: 56,
         backgroundColor: '#6C63FF',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        position: 'relative',
     },
     backButton: {
-        padding: 8,
-        color: 'white',
+        zIndex: 1, 
+    },
+    headerTitleWrapper: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     headerText: {
         fontFamily: 'Inter-Bold',
         fontSize: 16,
         color: 'white',
-    }, 
+    },
+    contactsDropdown: {
+        position: 'absolute',
+        top: 80,
+        left: 16,
+        right: 16,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 8,
+        zIndex: 1000,
+        shadowColor: '#000',
+        shadowOffset: {
+        width: 0,
+        height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    contactItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 8,
+    },
+    contactAvatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        marginRight: 12,
+    },
+    contactInfo: {
+        flex: 1,
+    },
+    contactName: {
+        fontFamily: 'Inter-SemiBold',
+        fontSize: 16,
+        color: '#1f2937',
+        marginBottom: 4,
+    },
+    contactStatus: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginRight: 4,
+    },
+    statusText: {
+        fontFamily: 'Inter-Regular',
+        fontSize: 12,
+        color: '#6b7280',
+    },
     keyboardAvoidingView: {
         flex: 1,
     },

@@ -3,11 +3,10 @@ import { StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function NotFoundScreen() {
   return (
-    <GestureHandlerRootView>
+    <>
       <Stack.Screen options={{ title: 'Oops!' }} />
       <ThemedView style={styles.container}>
         <ThemedText type="title">This screen doesn't exist.</ThemedText>
@@ -15,7 +14,7 @@ export default function NotFoundScreen() {
           <ThemedText type="link">Go to home screen!</ThemedText>
         </Link>
       </ThemedView>
-    </GestureHandlerRootView>
+    </>
   );
 }
 
