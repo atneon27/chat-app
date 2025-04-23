@@ -32,7 +32,7 @@ export function ChatMessage({id, text, name, time}: MessageType) {
         </Text>
       </View>
       <View style={styles.timeContainer}>
-        {isUser && <Text style={styles.readTextSender}>You</Text>}
+        {/* {isUser && <Text style={styles.readTextSender}>You</Text>} */}
         <Text style={styles.timeText}>{time}</Text> 
       </View>
     </View>
