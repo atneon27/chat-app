@@ -10,7 +10,7 @@ const server = createServer(app);
 // socket cors setup
 const io = new Server(server, {
     cors: {
-        origin: "<http://localhost:3000>"
+        origin: "*"
     }
 })
 
